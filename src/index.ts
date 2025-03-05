@@ -1,45 +1,39 @@
 export default {
   async fetch(request, env) {
     try {
-      // Ensure the request is a POST request
-      if (request.method !== "POST") {
-        return new Response(JSON.stringify({ error: "Only POST requests are allowed" }), { status: 405 });
-      }
-
-      // Parse the JSON body
       const requestBody = await request.json();
-
-      // Ensure "prompt" is present and valid
+      
+      // Validate that a prompt exists
       if (!requestBody.prompt || typeof requestBody.prompt !== "string") {
-        return new Response(JSON.stringify({ error: "Missing or invalid 'prompt'" }), { status: 400 });
+        return new Response(JSON.stringify({ error: "Missing or invalid prompt" }), { status: 400 });
       }
 
+      // Validate .image_b64 - must be either a valid string or null
+      if (requestBody.image_b64 && typeof requestBody.image_b64 !== "string") {
+        return new Response(JSON.stringify({ error: "Invalid image_b64 format" }), { status: 400 });
+      }
+
+      // Construct inputs object dynamically
       const inputs = {
         prompt: requestBody.prompt,
         negative_prompt: requestBody.negative_prompt || "",
         height: requestBody.height || 512,
         width: requestBody.width || 512,
         num_steps: requestBody.num_steps || 20,
-        strength: requestBody.strength ?? 1.0,
-        guidance: requestBody.guidance ?? 7.5,
-        seed: requestBody.seed ?? Math.floor(Math.random() * 1000000),
-        image: requestBody.image || null,
-        image_b64: requestBody.image_b64 && typeof requestBody.image_b64 === "string" ? requestBody.image_b64 : null,  // FIXED
-        mask: requestBody.mask || null
+        guidance: requestBody.guidance || 7.5,
+        strength: requestBody.strength || 1.0,
+        seed: requestBody.seed || undefined,
+        image_b64: requestBody.image_b64 || null,  // ✅ Ensure it's null if not provided
       };
 
-      // Call the AI model
+      // Call Stable Diffusion
       const response = await env.AI.run("@cf/stabilityai/stable-diffusion-xl-base-1.0", inputs);
 
-      // Return the AI-generated image as a response
       return new Response(response, {
-        headers: { "Content-Type": "image/png" }
+        headers: { "content-type": "image/png" },
       });
-
     } catch (error) {
-      return new Response(JSON.stringify({ error: "Invalid request format", details: error.message }), {
-        status: 400
-      });
+      return new Response(JSON.stringify({ error: "Invalid request format", details: error.message }), { status: 400 });
     }
   },
 } satisfies ExportedHandler<Env>;
