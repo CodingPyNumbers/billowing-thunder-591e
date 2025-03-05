@@ -12,15 +12,11 @@ export default {
       // Define inputs with the received prompt
       const inputs = { prompt };
 
-      // Call Cloudflare AI Model
-      const response = await env.AI.run(
-        "@cf/stabilityai/stable-diffusion-xl-base-1.0",
-        inputs
-      );
-
       // Return the generated image
       return new Response(response, {
-        headers: { "content-type": "image/png" },
+        headers: { 
+          "content-type": "image/png" 
+        },
       });
 
     } catch (error) {
