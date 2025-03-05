@@ -9,9 +9,9 @@ export default {
       }
 
       // Validate .image_b64 - must be either a valid string or null
-      if (requestBody.image_b64 && typeof requestBody.image_b64 !== "string") {
-        return new Response(JSON.stringify({ error: "Invalid image_b64 format" }), { status: 400 });
-      }
+      //if (requestBody.image_b64 && typeof requestBody.image_b64 !== "string") {
+      //  return new Response(JSON.stringify({ error: "Invalid image_b64 format" }), { status: 400 });
+      //}
 
       // Construct inputs object dynamically
       const inputs = {
@@ -23,7 +23,7 @@ export default {
         guidance: requestBody.guidance || 7.5,
         strength: requestBody.strength || 1.0,
         seed: requestBody.seed || undefined,
-        image_b64: requestBody.image_b64 || null,  // ✅ Ensure it's null if not provided
+        //image_b64: requestBody.image_b64 || null,  // ✅ Ensure it's null if not provided
       };
 
       // Call Stable Diffusion
