@@ -14,18 +14,17 @@ export default {
         return new Response(JSON.stringify({ error: "Missing or invalid 'prompt'" }), { status: 400 });
       }
 
-      // Construct the input object with all parameters
       const inputs = {
         prompt: requestBody.prompt,
         negative_prompt: requestBody.negative_prompt || "",
         height: requestBody.height || 512,
         width: requestBody.width || 512,
         num_steps: requestBody.num_steps || 20,
-        strength: requestBody.strength ?? 1.0,  // Use "??" to allow 0 values
+        strength: requestBody.strength ?? 1.0,
         guidance: requestBody.guidance ?? 7.5,
-        seed: requestBody.seed ?? Math.floor(Math.random() * 1000000), // Default to random seed
+        seed: requestBody.seed ?? Math.floor(Math.random() * 1000000),
         image: requestBody.image || null,
-        image_b64: requestBody.image_b64 || null,
+        image_b64: requestBody.image_b64 && typeof requestBody.image_b64 === "string" ? requestBody.image_b64 : null,  // FIXED
         mask: requestBody.mask || null
       };
 
