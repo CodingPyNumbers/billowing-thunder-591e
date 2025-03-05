@@ -1,52 +1,37 @@
 export default {
   async fetch(request, env) {
     try {
-      // Ensure we are handling a POST request
-      if (request.method !== "POST") {
-        return new Response(JSON.stringify({ error: "Only POST method is allowed" }), {
-          status: 405,
-          headers: { "Content-Type": "application/json" },
-        });
+      // Parse the request body as JSON
+      const requestBody = await request.json();
+
+      // Validate that "prompt" exists
+      if (!requestBody.prompt || typeof requestBody.prompt !== "string") {
+        return new Response(JSON.stringify({ error: "Missing or invalid prompt" }), { status: 400 });
       }
 
-      // Read the request body safely
-      const bodyText = await request.text(); // Read as raw text
-      let requestData;
+      // Construct the input object, passing all available parameters
+      const inputs = {
+        prompt: requestBody.prompt,
+        negative_prompt: requestBody.negative_prompt || "",
+        height: requestBody.height || 512, // Default height
+        width: requestBody.width || 512, // Default width
+        image: requestBody.image || null,
+        image_b64: requestBody.image_b64 || null,
+        mask: requestBody.mask || null,
+        num_steps: requestBody.num_steps || 20, // Default steps
+        strength: requestBody.strength || 1.0,
+        guidance: requestBody.guidance || 7.5,
+        seed: requestBody.seed || Math.floor(Math.random() * 1000000), // Random seed if none provided
+      };
 
-      try {
-        requestData = JSON.parse(bodyText); // Try parsing JSON
-      } catch (e) {
-        return new Response(JSON.stringify({ error: "Invalid JSON format" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+      // Call the Stable Diffusion model
+      const response = await env.AI.run("@cf/stabilityai/stable-diffusion-xl-base-1.0", inputs);
 
-      // Extract and validate the prompt
-      const prompt = requestData?.prompt;
-      if (!prompt || typeof prompt !== "string") {
-        return new Response(JSON.stringify({ error: "Missing or invalid prompt" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
-
-      // Call Cloudflare AI Model
-      const response = await env.AI.run(
-        "@cf/stabilityai/stable-diffusion-xl-base-1.0",
-        { prompt }
-      );
-
-      // Return the generated image
       return new Response(response, {
-        headers: { "Content-Type": "image/png" },
+        headers: { "content-type": "image/png" },
       });
-
     } catch (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(JSON.stringify({ error: "Invalid request format" }), { status: 400 });
     }
   },
 } satisfies ExportedHandler<Env>;
